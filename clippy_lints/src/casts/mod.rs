@@ -3,6 +3,7 @@ mod as_underscore;
 mod borrow_as_ptr;
 mod cast_abs_to_unsigned;
 mod cast_enum_constructor;
+mod cast_integer;
 mod cast_lossless;
 mod cast_nan_to_int;
 mod cast_possible_truncation;
@@ -171,6 +172,29 @@ declare_clippy_lint! {
     pedantic,
     "casts using `as` that are known to be lossless, e.g., `x as u64` where `x: u8`"
 }
+
+declare_clippy_lint! {
+    /// ### What it does
+    /// Checks for a cast from any unsigned integer type to another unsigned integer type.
+    /// Casting integers is subtle with many edge cases. In some cases, it is helpful to require these casts to be done with From or TryFrom. However, in some instances, the imprecisions may sometimes be acceptable, so this is set to
+    /// `Allow` by default.
+    ///
+    /// ### Why is this bad?
+    /// Casting from an larger type to a smaller type may cause an overflow. Casting from a smaller type to a larger type should be safe, but it's a good practice to encourage using From.
+    /// usize or isize casts cause additional troubles, because they vary based on the platform you are compiling for. Here, TryFrom is important to use.
+ 
+    ///
+    /// ### Example
+    /// ```rust
+    /// let x = usize::MAX;
+    /// x as u16;
+    /// ```
+    #[clippy::version = "1.69.0"]
+    pub CAST_INTEGERS,
+    pedantic,
+    "casts between integer types"
+}
+
 
 declare_clippy_lint! {
     /// ### What it does
@@ -663,6 +687,25 @@ declare_clippy_lint! {
     "casting a known floating-point NaN into an integer"
 }
 
+declare_clippy_lint! {
+    /// ### What it does
+    ///
+    /// ### Why is this bad?
+    ///
+    /// ### Example
+    /// ```rust
+    /// // example code where clippy issues a warning
+    /// ```
+    /// Use instead:
+    /// ```rust
+    /// // example code which does not raise clippy warning
+    /// ```
+    #[clippy::version = "1.69.0"]
+    pub CAST_INTEGER,
+    pedantic,
+    "default lint description"
+}
+
 pub struct Casts {
     msrv: Msrv,
 }
@@ -697,6 +740,7 @@ impl_lint_pass!(Casts => [
     CAST_SLICE_FROM_RAW_PARTS,
     AS_PTR_CAST_MUT,
     CAST_NAN_TO_INT,
+    CAST_INTEGER,
 ]);
 
 impl<'tcx> LateLintPass<'tcx> for Casts {
